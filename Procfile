@@ -1,1 +1,1 @@
-web: node D:\web-whispers\backend\index.js
+web: node backend/index.js
