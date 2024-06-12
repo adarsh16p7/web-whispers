@@ -1,0 +1,1 @@
+web: node D:\web-whispers\backend\index.js
