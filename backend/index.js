@@ -8,7 +8,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const multer = require('multer');
-const uploadMiddleware = multer({ dest: 'uploads/' });
+const uploadMiddleware = multer({ 
+    dest: 'uploads/',
+    limits: {
+        fieldSize: 10 * 1024 * 1024,
+    }});
 const fs = require('fs');
 
 const app = express();
