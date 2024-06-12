@@ -11,7 +11,7 @@ export default function EditPage() {
     const {id} = useParams();
 
     useEffect(() => {
-        fetch(`http://localhost:4000/post/${id}`)
+        fetch(`${process.env.REACT_APP_API_URL}/post/${id}`)
             .then(response => {
                 response.json().then(postDetails => {
                     setTitle(postDetails.title);
@@ -33,7 +33,7 @@ export default function EditPage() {
             data.set('file', files?.[0]);
         }
 
-        const response = await fetch('http://localhost:4000/post', {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/post`, {
             method: 'PUT',
             body: data,
             credentials: 'include',

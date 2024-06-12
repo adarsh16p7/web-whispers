@@ -16,7 +16,7 @@ export default function SinglePostPage() {
     const deletePost = async () => {
         const confirmed = window.confirm("Are you sure you want to delete this post?");
         if (confirmed) {
-            const response = await fetch(`http://localhost:4000/post/${id}`, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/post/${id}`, {
                 method: 'DELETE',
                 credentials: 'include',
             });
@@ -32,7 +32,7 @@ export default function SinglePostPage() {
     
 
     useEffect(() => {
-        fetch(`http://localhost:4000/post/${id}`)
+        fetch(`${process.env.REACT_APP_API_URL}/post/${id}`)
             .then(response => response.json())
             .then(postDetails => setPostDetails(postDetails));
     }, [id]);
@@ -47,7 +47,7 @@ export default function SinglePostPage() {
             <time>{format(new Date(postDetails.createdAt), 'MMM d, yyyy | HH:mm')}</time>
             <div className="author">by @{postDetails.author.username}</div>
             <div className="backdrop">
-                <img src={`http://localhost:4000/${postDetails.backdrop}`} alt='' />
+                <img src={`${process.env.REACT_APP_API_URL}/${postDetails.backdrop}`} alt='' />
             </div>
             <div dangerouslySetInnerHTML={{ __html: postDetails.content }} />
             
