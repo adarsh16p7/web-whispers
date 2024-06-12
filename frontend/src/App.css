@@ -1,0 +1,204 @@
+* {
+  box-sizing: border-box;
+}
+
+main {
+  padding: 9px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  background-color: #6caddf;
+  padding: 12px;
+  position: sticky; 
+  top: 4px; 
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+header a{
+  text-decoration: none;
+  color: #00285e;
+  align-items: center;
+}
+
+header a.logo {
+  font-size: 20px;
+  font-family: fantasy;
+  font-style: italic;
+}
+
+header a.logo:hover {
+  font-size: 21px;
+  transition: 0.15s ease-out;
+  color: #001c3f;
+}
+
+header nav {
+  display: flex;
+  gap: 17px;
+  font-weight: bold;
+}
+
+img {
+  max-width: 100%;
+}
+
+div.post {
+  display: grid;
+  grid-template-columns: 1fr;
+  /* grid-template-columns: 0.9fr 1.1fr; */
+  gap: 10px;
+  padding: 10px;
+  background-color: #e6f6ff;
+  margin-bottom: 17px;
+}
+
+@media screen and (min-width: 768px) {
+  div.post {
+    grid-template-columns: .9fr 1.1fr;
+  }
+}
+
+div.post div.texts h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+div.post div.texts a {
+  text-decoration: none;
+  color: unset;
+}
+
+div.post div.texts p {
+  margin: 2px;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+div.post p.info {
+  margin-top: 15px;
+  color: #888;
+  display: flex;
+  gap: 50px;
+}
+
+div.post a.author {
+  color: black;
+  font-weight: bold;
+  font-style: normal;
+}
+
+div.post div.texts p.highlight {
+  margin-top: 7px;
+}
+
+form.login, form.signup {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+input {
+  display: block;
+  margin-bottom: 5px;
+  background-color: #fff;
+  border: 3px solid #ddd;
+  width: 100%;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+
+.click-buttons, .edit-delete-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.edit-delete-buttons {
+  gap: 5px;
+  padding-top: 60px;
+  border-top: solid #001837 1px;
+}
+
+button {
+  width: 20%;
+  margin-top: 2px;
+  background-color: #00285e;
+  color: white;
+  padding: 5px;
+  border: 0;
+  border-radius: 6px;
+}
+
+button:hover {
+  background-color: #001837;
+  color: #6caddf;
+  transition: 0.15s ease-out;
+  cursor: pointer;
+}
+
+a[href="/login"]:hover,
+a[href="/signup"]:hover,
+a[href="/addPost"]:hover, a.logout:hover {
+  font-size: 17px;
+  transition: 0.07s ease-out;
+  cursor: pointer;
+}
+
+
+form.login h1, form.signup h1 {
+  font-family: 'Lucida Sans';
+  text-align: center;
+}
+
+.backdrop {
+  margin-top: 10px;
+}
+
+.single-post-page h1 {
+  text-align: center;
+  margin-bottom: 0.5%;
+}
+
+.single-post-page time, .single-post-page .author {
+  text-align: center;
+  display: block;
+}
+
+.single-post-page time {
+  color: #585858;
+  font-style: italic;
+  font-size: 13px;
+}
+
+.single-post-page .author {
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.single-post-page h4 {
+  font-size: large;
+}
+
+.error-popup {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  padding: 10px 15px;
+  border-radius: 5px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.success-popup {
+  background-color: #c6f5cd;
+  color: #1c7222;
+  border: 1px solid #c6f5cd;
+  padding: 10px 15px;
+  border-radius: 5px;
+  margin-top: 10px;
+  text-align: center;
+}
