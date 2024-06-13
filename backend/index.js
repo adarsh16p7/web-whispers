@@ -19,6 +19,7 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 const salt = bcrypt.genSaltSync(10);
 const secret = process.env.JWT_SECRET;
+const path = require('path');
 
 app.use(cors({credentials:true, origin:['http://localhost:3000', 'https://web-whispers-26c6dd91cb2b.herokuapp.com/']}));
 app.use(express.json());
@@ -201,6 +202,17 @@ app.get('/post/:id', async (req, res) => {
     const {id} = req.params;
     const postData = await Post.findById(id).populate('author', ['username']);
     res.json(postData);
+});
+
+app.get('/*', (req, res) => {
+    res.sendFile(
+        path.join(__dirname, "../frontend/build/index.html"),
+        function(err) {
+            if (err) {
+                res.status(500).send(err);
+            }
+        }
+    );
 });
 
 app.listen(PORT);
