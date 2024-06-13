@@ -20,7 +20,7 @@
     "nodemon": "^3.1.2"
   },
     "scripts": {
-      "start": "node index.js"
+      "start": "cd backend && node index.js"
     }
 }  
 

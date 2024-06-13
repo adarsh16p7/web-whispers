@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 4000;
 const salt = bcrypt.genSaltSync(10);
 const secret = process.env.JWT_SECRET;
 
-app.use(cors({credentials:true, origin:'http://localhost:3000'}));
+app.use(cors({credentials:true, origin:['http://localhost:3000', 'https://web-whispers-26c6dd91cb2b.herokuapp.com/']}));
 app.use(express.json());
 app.set("trust proxy", 1);
 app.use(cookieParser());
@@ -187,8 +187,6 @@ app.delete('/post/:id', async (req, res) => {
         }
     }
 });
-
-
 
 app.get('/post', async (req, res) => {
     res.json(
