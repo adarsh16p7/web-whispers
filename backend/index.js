@@ -12,44 +12,36 @@ const uploadMiddleware = multer({
     dest: 'uploads/',
     limits: {
         fieldSize: 10 * 1024 * 1024,
-    }
-});
+    }});
 const fs = require('fs');
-const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 const salt = bcrypt.genSaltSync(10);
 const secret = process.env.JWT_SECRET;
-const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
-// Middleware
-app.use(cors({
-    origin: frontendUrl,
-    credentials: true, // Enable credentials (cookies, authorization headers)
-}));
+app.use(cors({credentials:true, origin:'http://localhost:3000'}));
 app.use(express.json());
+app.set("trust proxy", 1);
 app.use(cookieParser());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(__dirname + '/uploads'));
 
-// MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI)
 .then(() => console.log('MongoDB connected successfully'))
 .catch(err => console.error('MongoDB connection error:', err));
 
-// Routes
 app.post('/signup', async (req, res) => {
-    const { username, password } = req.body;
+    const {username, password} = req.body;
     try {
         const userData = await User.create({
             username,
-            password: bcrypt.hashSync(password, salt),
-        });
+            password:bcrypt.hashSync(password, salt)
+        });  
         res.json(userData);
     } catch (err) {
         res.status(400).json(err);
     }
-});
+})
 
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
@@ -58,122 +50,111 @@ app.post('/login', async (req, res) => {
         const userData = await User.findOne({ username });
         if (!userData) {
             return res.status(400).json('Invalid username or password');
-        }
+        };
 
         const passwordCheck = bcrypt.compareSync(password, userData.password);
 
         if (passwordCheck) {
-            const token = jwt.sign({ username, id: userData._id }, secret);
-            res.cookie('token', token, { httpOnly: true }).json({
-                id: userData._id,
-                username,
+            const token = jwt.sign({ username, id: userData._id }, secret, {}, (err, token) => {
+                if (err) throw err;
+                res.cookie('token', token).json({
+                    id: userData._id,
+                    username,
+                });
             });
         } else {
             res.status(400).json('Invalid username or password');
         }
     } catch (err) {
-        console.error('Login error:', err);
         res.status(500).json('Internal server error');
     }
 });
 
+
 app.get('/profile', (req, res) => {
-    const token = req.cookies.token;
+    const { token } = req.cookies;
 
     if (!token) {
         return res.status(401).json({ message: 'Authentication token is missing' });
-    }
-    
-    jwt.verify(token, secret, (err, decoded) => {
+    };
+    jwt.verify(token, secret, (err, info) => {
         if (err) {
             return res.status(401).json({ message: 'Invalid token' });
-        }
-        
-        res.json(decoded);
+        };
+        res.json(info);
     });
 });
 
+
 app.post('/logout', (req, res) => {
-    res.clearCookie('token').json('OK');
-});
+    res.cookie('token','').json('OK')
+})
 
 app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
-    try {
-        const { originalname, path } = req.file;
-        const parts = originalname.split('.');
-        const ext = parts[parts.length - 1];
-        const newPath = `${path}.${ext}`;
-        fs.renameSync(path, newPath);
+    const {originalname, path} = req.file;
+    const parts = originalname.split('.');
+    const ext = parts[parts.length - 1];
+    const newPath = `${path}.${ext}`;
+    fs.renameSync(path, newPath);
 
-        const { token } = req.cookies;
-        jwt.verify(token, secret, async (err, info) => {
-            if (err) throw err;
-
-            const { title, highlight, content } = req.body;
-            const postData = await Post.create({
-                title,
-                highlight,
-                content,
-                backdrop: newPath,
-                author: info.id,
-            });
-
-            res.json(postData);
-        });
-    } catch (error) {
-        console.error('Post creation error:', error);
-        res.status(500).json('Internal server error');
-    }
+    const {token} = req.cookies;
+    jwt.verify(token, secret, {}, async (err, info) => {
+        if (err) throw err;
+        const {title, highlight, content} = req.body;
+        const postData = await Post.create({
+        title,
+        highlight,
+        content,
+        backdrop:newPath,
+        author:info.id,
+    });
+    res.json(postData); 
+    });
 });
 
 app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
-    try {
-        let newPath = null;
+    let newPath = null;
 
-        if (req.file) {
-            const { originalname, path } = req.file;
-            const parts = originalname.split('.');
-            const ext = parts[parts.length - 1];
-            newPath = `${path}.${ext}`;
-            fs.renameSync(path, newPath);
+    if (req.file) {
+        const { originalname, path } = req.file;
+        const parts = originalname.split('.');
+        const ext = parts[parts.length - 1];
+        newPath = `${path}.${ext}`;
+        fs.renameSync(path, newPath);
+    }
+
+    const { token } = req.cookies;
+    jwt.verify(token, secret, {}, async (err, info) => {
+        if (err) throw err;
+        const { id, title, highlight, content } = req.body;
+        const postData = await Post.findById(id);
+
+        if (!postData) {
+            return res.status(404).json('Post not found');
         }
 
-        const { token } = req.cookies;
-        jwt.verify(token, secret, async (err, info) => {
-            if (err) throw err;
+        if (postData.author.toString() !== info.id) {
+            return res.status(403).json('You do not have the permission to edit this post.');
+        }
 
-            const { id, title, highlight, content } = req.body;
-            const postData = await Post.findById(id);
+        postData.title = title;
+        postData.highlight = highlight;
+        postData.content = content;
+        if (newPath) {
+            postData.backdrop = newPath;
+        }
 
-            if (!postData) {
-                return res.status(404).json('Post not found');
-            }
+        await postData.save();
 
-            if (postData.author.toString() !== info.id) {
-                return res.status(403).json('You do not have the permission to edit this post.');
-            }
-
-            postData.title = title;
-            postData.highlight = highlight;
-            postData.content = content;
-            if (newPath) {
-                postData.backdrop = newPath;
-            }
-
-            await postData.save();
-
-            res.json(postData);
-        });
-    } catch (error) {
-        console.error('Post update error:', error);
-        res.status(500).json('Internal server error');
-    }
+        res.json(postData);
+    });
 });
 
 app.delete('/post/:id', async (req, res) => {
+    const { id } = req.params;
+    const token = req.cookies.token;
+
     try {
-        const { id } = req.params;
-        const token = req.cookies.token;
         const decoded = jwt.verify(token, secret);
 
         const postData = await Post.findById(id);
@@ -186,69 +167,42 @@ app.delete('/post/:id', async (req, res) => {
             return res.status(403).json('You do not have the permission to delete this post.');
         }
 
+        // Delete the post
         await Post.findByIdAndDelete(id);
 
+        // Delete the associated image file (optional)
         if (postData.backdrop) {
             fs.unlinkSync(postData.backdrop);
         }
 
         res.json({ message: 'Post deleted successfully' });
     } catch (error) {
-        console.error('Post deletion error:', error);
-        res.status(500).json('Internal server error');
+        console.error('Error deleting post:', error);
+        if (!res.headersSent) {
+            if (error instanceof jwt.JsonWebTokenError) {
+                res.status(401).json({ message: 'Invalid token' });
+            } else {
+                res.status(500).json('Internal server error');
+            }
+        }
     }
 });
 
+
+
 app.get('/post', async (req, res) => {
-    try {
-        const posts = await Post.find()
+    res.json(
+        await Post.find()
             .populate('author', ['username'])
-            .sort({ createdAt: -1 })
-            .limit(20);
-        
-        res.json(posts);
-    } catch (error) {
-        console.error('Error fetching posts:', error);
-        res.status(500).json('Internal server error');
-    }
+            .sort({createdAt: -1})
+            .limit(20)
+        );
 });
 
 app.get('/post/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const postData = await Post.findById(id).populate('author', ['username']);
-
-        if (!postData) {
-            return res.status(404).json('Post not found');
-        }
-
-        res.json(postData);
-    } catch (error) {
-        console.error('Error fetching post by ID:', error);
-        res.status(500).json('Internal server error');
-    }
+    const {id} = req.params;
+    const postData = await Post.findById(id).populate('author', ['username']);
+    res.json(postData);
 });
 
-// Serve static files from the React frontend app
-const frontendPath = path.join(__dirname, '..', 'frontend', 'public');
-app.use(express.static(frontendPath));
-
-app.get('/', (req, res) => {
-    console.log('Serving React app for root route /');
-    res.sendFile(path.join(frontendPath, 'index.html'), err => {
-      if (err) {
-        console.error('Error serving index.html:', err);
-        res.status(500).send(err);
-      }
-    });
-  });
-
-// Catch-all route to serve the React frontend's index.html
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend/public', 'index.html'));
-});
-
-// Start server
-app.listen(PORT, () => {
-    console.log(`Server is listening on port ${PORT}`);
-});
+app.listen(PORT);
