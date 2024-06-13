@@ -31,8 +31,8 @@ mongoose.connect(process.env.MONGODB_URI)
 .catch(err => console.error('MongoDB connection error:', err));
 
 app.get('/', (req, res) => {
-    res.json('Home page');
-})
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
 
 app.post('/signup', async (req, res) => {
     const {username, password} = req.body;
