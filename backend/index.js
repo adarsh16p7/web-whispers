@@ -162,43 +162,61 @@ app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
 });
 
 app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
-    let newPath = null;
+    try {
+        let newPath = null;
 
-    if (req.file) {
-        // Rename and save uploaded file
-        const { originalname, path } = req.file;
-        const parts = originalname.split('.');
-        const ext = parts[parts.length - 1];
-        newPath = `${path}.${ext}`;
-        fs.renameSync(path, newPath);
+        // Handle uploaded file
+        if (req.file) {
+            const { originalname, path } = req.file;
+            const parts = originalname.split('.');
+            const ext = parts[parts.length - 1];
+            newPath = `${path}.${ext}`;
+            fs.renameSync(path, newPath);
+        }
+
+        const { token } = req.cookies;
+
+        // Verify token
+        jwt.verify(token, secret, {}, async (err, decoded) => {
+            if (err) {
+                return res.status(401).json({ message: 'Invalid token' });
+            }
+
+            const { id, title, highlight, content } = req.body;
+
+            // Check if required fields are provided
+            if (!title || !highlight || !content) {
+                return res.status(400).json({ message: 'Title, highlight, and content are required' });
+            }
+
+            // Find post by ID
+            const postData = await Post.findById(id);
+            if (!postData) {
+                return res.status(404).json({ message: 'Post not found' });
+            }
+
+            // Check if the logged-in user is the author of the post
+            if (postData.author.toString() !== decoded.id) {
+                return res.status(403).json({ message: 'You do not have permission to edit this post' });
+            }
+
+            // Update post fields
+            postData.title = title;
+            postData.highlight = highlight;
+            postData.content = content;
+            if (newPath) {
+                postData.backdrop = newPath;
+            }
+
+            // Save updated post to database
+            await postData.save();
+
+            res.json(postData);
+        });
+    } catch (error) {
+        console.error('Error updating post:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
-
-    // Verify token and update post    
-    const { token } = req.cookies;
-    jwt.verify(token, secret, {}, async (err, info) => {
-        if (err) throw err;
-        const { id, title, highlight, content } = req.body;
-        const postData = await Post.findById(id);
-
-        if (!postData) {
-            return res.status(404).json('Post not found');
-        }
-
-        if (postData.author.toString() !== info.id) {
-            return res.status(403).json('You do not have the permission to edit this post.');
-        }
-
-        // Update post fields
-        postData.title = title;
-        postData.highlight = highlight;
-        postData.content = content;
-        if (newPath) {
-            postData.backdrop = newPath;
-        }
-
-        await postData.save(); // Save updated post to database
-        res.json(postData);
-    });
 });
 
 app.delete('/post/:id', async (req, res) => {
