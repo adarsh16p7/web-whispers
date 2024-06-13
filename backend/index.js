@@ -231,6 +231,16 @@ app.get('/post/:id', async (req, res) => {
 // Serve static files from the React frontend app
 app.use(express.static(path.join(__dirname, 'frontend/build')));
 
+app.get('/', (req, res) => {
+    console.log('Serving React app for root route /');
+    res.sendFile(path.join(__dirname, 'frontend/build', 'index.html'), err => {
+      if (err) {
+        console.error('Error serving index.html:', err);
+        res.status(500).send(err);
+      }
+    });
+  });
+
 // Catch-all route to serve the React frontend's index.html
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'frontend/build', 'index.html'));
