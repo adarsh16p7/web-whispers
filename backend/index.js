@@ -30,6 +30,10 @@ mongoose.connect(process.env.MONGODB_URI)
 .then(() => console.log('MongoDB connected successfully'))
 .catch(err => console.error('MongoDB connection error:', err));
 
+app.get('/', (req, res) => {
+    res.json('Home page');
+})
+
 app.post('/signup', async (req, res) => {
     const {username, password} = req.body;
     try {
