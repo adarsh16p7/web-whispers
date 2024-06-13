@@ -204,7 +204,7 @@ app.get('/post/:id', async (req, res) => {
     res.json(postData);
 });
 
-app.get('/*', (req, res) => {
+app.get('/', (req, res) => {
     res.sendFile(
         path.join(__dirname, "../frontend/build/index.html"),
         function(err) {
