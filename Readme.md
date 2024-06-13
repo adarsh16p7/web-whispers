@@ -34,6 +34,7 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
   - [Making a Progressive Web App](#making-a-progressive-web-app)
   - [Advanced Configuration](#advanced-configuration)
   - [Deployment](#deployment)
+  - [Procfile](#procfile)
   - [`yarn build` fails to minify](#yarn-build-fails-to-minify)
 
 
@@ -182,6 +183,10 @@ This section has moved here: [Advanced Configuration](https://facebook.github.io
 ## Deployment
 
 This section has moved here: [Deployment](https://facebook.github.io/create-react-app/docs/deployment)
+
+## Procfile
+
+A `Procfile` is a text file used to declare various process types in a web application for platforms like Heroku.
 
 ## `yarn build` fails to minify
 

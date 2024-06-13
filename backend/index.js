@@ -7,7 +7,7 @@ const Post = require('./models/Post');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
-const multer = require('multer');
+const multer = require('multer'); // For handling file uploads
 const uploadMiddleware = multer({ 
     dest: 'uploads/',
     limits: {
@@ -25,24 +25,32 @@ app.use(cors({credentials:true, origin:['http://localhost:3000', 'https://web-wh
 app.use(express.json());
 app.set("trust proxy", 1);
 app.use(cookieParser());
-app.use('/uploads', express.static(__dirname + '/uploads'));
+app.use('/uploads', express.static(__dirname + '/uploads')); // Serve uploaded files statically
 
 mongoose.connect(process.env.MONGODB_URI)
-.then(() => console.log('MongoDB connected successfully'))
+.then(() => console.log('MongoDB connected successfully!'))
 .catch(err => console.error('MongoDB connection error:', err));
 
 app.post('/signup', async (req, res) => {
-    const {username, password} = req.body;
+    const { username, password } = req.body;
     try {
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            return res.status(400).json({ error: 'Username already exists' });
+        }
+        
         const userData = await User.create({
             username,
-            password:bcrypt.hashSync(password, salt)
-        });  
+            password: bcrypt.hashSync(password, salt) // Hash password
+        });
+        
         res.json(userData);
     } catch (err) {
-        res.status(400).json(err);
+        console.error('Signup error:', err);
+        res.status(500).json({ error: 'Internal server error' });
     }
-})
+});
+
 
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
@@ -53,8 +61,10 @@ app.post('/login', async (req, res) => {
             return res.status(400).json('Invalid username or password');
         };
 
+        // Compare passwords
         const passwordCheck = bcrypt.compareSync(password, userData.password);
 
+        // If passwords match, generate JWT token
         if (passwordCheck) {
             const token = jwt.sign({ username, id: userData._id }, secret, {}, (err, token) => {
                 if (err) throw err;
@@ -71,21 +81,26 @@ app.post('/login', async (req, res) => {
     }
 });
 
-
 app.get('/profile', (req, res) => {
     const { token } = req.cookies;
 
     if (!token) {
-        return res.status(401).json({ message: 'Authentication token is missing' });
-    };
-    jwt.verify(token, secret, (err, info) => {
+        return res.status(200).json({ message: 'Authentication required' });
+    }
+
+    jwt.verify(token, secret, (err, decoded) => {
         if (err) {
+            if (err.name === 'TokenExpiredError') {
+                return res.status(401).json({ message: 'Token expired' });
+            }
             return res.status(401).json({ message: 'Invalid token' });
-        };
-        res.json(info);
+        }
+        res.json({
+            id: decoded.id,
+            username: decoded.username,
+        });
     });
 });
-
 
 app.post('/logout', (req, res) => {
     res.cookie('token','').json('OK')
@@ -93,8 +108,28 @@ app.post('/logout', (req, res) => {
 
 app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
     try {
+        const { title, highlight, content } = req.body;
+
+        if (!title) {
+            return res.status(400).json({ error: 'Title is required' });
+        }
+
+        if (!highlight) {
+            return res.status(400).json({ error: 'Highlight is required' });
+        }
+
+        if (!content) {
+            return res.status(400).json({ error: 'Content is required' });
+        }
+
         if (!req.file) {
-            throw new Error('No file uploaded');
+            return res.status(400).json({ error: 'Backdrop file is required' });
+        }
+
+        // Validate backdrop file type
+        const mimeType = req.file.mimetype;
+        if (!mimeType.startsWith('image/')) {
+            return res.status(400).json({ error: 'The backdrop file should be an image' });
         }
 
         const { originalname, path } = req.file;
@@ -105,26 +140,24 @@ app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
 
         const { token } = req.cookies;
         jwt.verify(token, secret, {}, async (err, info) => {
-            if (err) throw err;
+            if (err) {
+                return res.status(401).json({ error: 'Invalid token' });
+            }
 
-            const { title, highlight, content } = req.body;
             let postData = {
                 title,
                 highlight,
                 content,
                 author: info.id,
+                backdrop: newPath
             };
-
-            if (newPath) {
-                postData.backdrop = newPath;
-            }
 
             postData = await Post.create(postData);
             res.json(postData);
         });
     } catch (error) {
         console.error('Post creation error:', error);
-        res.status(500).json('Internal server error');
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -132,6 +165,7 @@ app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
     let newPath = null;
 
     if (req.file) {
+        // Rename and save uploaded file
         const { originalname, path } = req.file;
         const parts = originalname.split('.');
         const ext = parts[parts.length - 1];
@@ -139,6 +173,7 @@ app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
         fs.renameSync(path, newPath);
     }
 
+    // Verify token and update post    
     const { token } = req.cookies;
     jwt.verify(token, secret, {}, async (err, info) => {
         if (err) throw err;
@@ -153,6 +188,7 @@ app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
             return res.status(403).json('You do not have the permission to edit this post.');
         }
 
+        // Update post fields
         postData.title = title;
         postData.highlight = highlight;
         postData.content = content;
@@ -160,8 +196,7 @@ app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
             postData.backdrop = newPath;
         }
 
-        await postData.save();
-
+        await postData.save(); // Save updated post to database
         res.json(postData);
     });
 });
@@ -183,12 +218,9 @@ app.delete('/post/:id', async (req, res) => {
             return res.status(403).json('You do not have the permission to delete this post.');
         }
 
-        // Delete the post
         await Post.findByIdAndDelete(id);
-
-        // Delete the associated image file (optional)
         if (postData.backdrop) {
-            fs.unlinkSync(postData.backdrop);
+            fs.unlinkSync(postData.backdrop); // Delete associated image file
         }
 
         res.json({ message: 'Post deleted successfully' });
@@ -204,6 +236,7 @@ app.delete('/post/:id', async (req, res) => {
     }
 });
 
+// Endpoint to retrieve all posts
 app.get('/post', async (req, res) => {
     res.json(
         await Post.find()
@@ -213,12 +246,14 @@ app.get('/post', async (req, res) => {
         );
 });
 
+// Endpoint to retrieve a specific post by ID
 app.get('/post/:id', async (req, res) => {
     const {id} = req.params;
     const postData = await Post.findById(id).populate('author', ['username']);
     res.json(postData);
 });
 
+// Serve static files from frontend build directory
 app.use(express.static(path.join(__dirname, '..', 'frontend', 'build')));
 
 app.get('/', (req, res) => {
@@ -232,4 +267,7 @@ app.get('/', (req, res) => {
     );
 });
 
-app.listen(PORT);
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
+

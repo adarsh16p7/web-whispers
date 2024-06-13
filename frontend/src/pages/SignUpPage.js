@@ -8,47 +8,55 @@ export default function SignUpPage() {
 
     async function signup(evt) {
         evt.preventDefault();
-
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/signup`, {
-            method: 'POST',
-            body: JSON.stringify({ username, password }),
-            headers: { 'Content-Type': 'application/json' },
-        });
-
-        if (response.ok) {
-            setSuccessMessage('Your registration was successful. Please proceed to login to start sharing your own posts.');
-            setErrorMessage(''); // Clear any previous error messages
-        } else {
-            response.json().then(errorData => {
-                if (errorData.errorResponse && errorData.errorResponse.code === 11000) {
-                    setErrorMessage('User already exists.');
+    
+        try {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/signup`, {
+                method: 'POST',
+                body: JSON.stringify({ username, password }),
+                headers: { 'Content-Type': 'application/json' },
+            });
+    
+            const data = await response.json();
+            console.log('Signup response:', data); // Log the response to inspect in browser console
+    
+            if (response.ok) {
+                setSuccessMessage('Your registration was successful. Please proceed to login to start sharing your own posts.');
+                setErrorMessage(''); // Clear any previous error messages
+            } else {
+                if (data.error && data.error.includes('Username already exists')) {
+                    setErrorMessage('Username is already taken. Please choose another.');
                 } else {
                     setErrorMessage('An error occurred. Please try again later.');
                 }
                 setSuccessMessage('');
-            });
-        }
-                
+            }
+        } catch (error) {
+            console.error('Signup error:', error);
+            setErrorMessage('An unexpected error occurred. Please try again later.');
+            setSuccessMessage('');
+        };
     };
-
+    
     return (
         <div className="signup-page">
             <form className="signup" onSubmit={signup}>
-                <h1>SignUp</h1>
+                <h1>Sign Up</h1>
                 <input 
                     type="text" 
-                    placeholder="username"
+                    placeholder="Username"
                     value={username}
                     onChange={evt => setUsername(evt.target.value)} 
+                    required
                 />
                 <input 
                     type="password" 
-                    placeholder="password"
+                    placeholder="Password"
                     value={password}
                     onChange={evt => setPassword(evt.target.value)} 
+                    required
                 />
                 <div className="click-buttons">
-                    <button type="submit">Signup</button>
+                    <button type="submit">Sign Up</button>
                 </div>
             </form>
             {errorMessage && (

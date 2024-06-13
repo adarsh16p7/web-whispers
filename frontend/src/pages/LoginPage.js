@@ -9,8 +9,17 @@ export default function LoginPage() {
     const [errorMessage, setErrorMessage] = useState('');
     const { setUserInfo } = useContext(UserContext);
 
+    const [usernameError, setUsernameError] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+
     async function login(evt) {
         evt.preventDefault();
+
+        if (!username || !password) {
+            setUsernameError(username ? '' : 'Username is required');
+            setPasswordError(password ? '' : 'Password is required');
+            return;
+        }
 
         const response = await fetch(`${process.env.REACT_APP_API_URL}/login`, { 
             method: 'POST',
@@ -26,7 +35,11 @@ export default function LoginPage() {
             });
         } else {
             response.json().then(errorData => {
-                setErrorMessage(errorData);
+                if (errorData === 'Invalid username or password') {
+                    setErrorMessage('Invalid username or password');
+                } else {
+                    setErrorMessage('An error occurred');
+                }
             });
         }
     };
@@ -41,16 +54,24 @@ export default function LoginPage() {
                 <h1>LogIn</h1>
                 <input 
                     type="text" 
-                    placeholder="username"
+                    placeholder="Username"
                     value={username}
-                    onChange={evt => setUsername(evt.target.value)} 
+                    onChange={evt => {
+                        setUsername(evt.target.value);
+                        setUsernameError(''); // Clear error when typing
+                    }} 
                 />
+                {usernameError && <div className="error-message">{usernameError}</div>}
                 <input 
                     type="password" 
-                    placeholder="password"
+                    placeholder="Password"
                     value={password}
-                    onChange={evt => setPassword(evt.target.value)} 
+                    onChange={evt => {
+                        setPassword(evt.target.value);
+                        setPasswordError('');
+                    }} 
                 />
+                {passwordError && <div className="error-message">{passwordError}</div>}
                 <div className="click-buttons">
                     <button type="submit">Login</button>
                 </div>
@@ -62,4 +83,4 @@ export default function LoginPage() {
             )}
         </div>
     );
-};
+}

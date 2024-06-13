@@ -50,7 +50,6 @@ img {
 div.post {
   display: grid;
   grid-template-columns: 1fr;
-  /* grid-template-columns: 0.9fr 1.1fr; */
   gap: 10px;
   padding: 10px;
   background-color: #e6f6ff;
@@ -86,8 +85,8 @@ div.post p.info {
   gap: 50px;
 }
 
-div.post a.author {
-  color: black;
+div.post span.author {
+  color: #606191;
   font-weight: bold;
   font-style: normal;
 }
@@ -158,6 +157,10 @@ form.login h1, form.signup h1 {
   margin-top: 10px;
 }
 
+.single-post-page {
+  color: #001837;
+}
+
 .single-post-page h1 {
   text-align: center;
   margin-bottom: 0.5%;
@@ -201,4 +204,9 @@ form.login h1, form.signup h1 {
   border-radius: 5px;
   margin-top: 10px;
   text-align: center;
+}
+
+.custom-link {
+  text-decoration: none;
+  color: #001837;
 }
