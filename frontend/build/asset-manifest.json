@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "https://web-whispers-26c6dd91cb2b.herokuapp.com/static/css/main.77fb6c4f.css",
-    "main.js": "https://web-whispers-26c6dd91cb2b.herokuapp.com/static/js/main.9b87da71.js",
-    "static/js/453.d855a71b.chunk.js": "https://web-whispers-26c6dd91cb2b.herokuapp.com/static/js/453.d855a71b.chunk.js",
-    "index.html": "https://web-whispers-26c6dd91cb2b.herokuapp.com/index.html",
-    "main.77fb6c4f.css.map": "https://web-whispers-26c6dd91cb2b.herokuapp.com/static/css/main.77fb6c4f.css.map",
-    "main.9b87da71.js.map": "https://web-whispers-26c6dd91cb2b.herokuapp.com/static/js/main.9b87da71.js.map",
-    "453.d855a71b.chunk.js.map": "https://web-whispers-26c6dd91cb2b.herokuapp.com/static/js/453.d855a71b.chunk.js.map"
+    "main.css": "https://web-whispers-ef0e3cc98770.herokuapp.com/static/css/main.77fb6c4f.css",
+    "main.js": "https://web-whispers-ef0e3cc98770.herokuapp.com/static/js/main.9609f2bf.js",
+    "static/js/453.d855a71b.chunk.js": "https://web-whispers-ef0e3cc98770.herokuapp.com/static/js/453.d855a71b.chunk.js",
+    "index.html": "https://web-whispers-ef0e3cc98770.herokuapp.com/index.html",
+    "main.77fb6c4f.css.map": "https://web-whispers-ef0e3cc98770.herokuapp.com/static/css/main.77fb6c4f.css.map",
+    "main.9609f2bf.js.map": "https://web-whispers-ef0e3cc98770.herokuapp.com/static/js/main.9609f2bf.js.map",
+    "453.d855a71b.chunk.js.map": "https://web-whispers-ef0e3cc98770.herokuapp.com/static/js/453.d855a71b.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.77fb6c4f.css",
-    "static/js/main.9b87da71.js"
+    "static/js/main.9609f2bf.js"
   ]
 }
